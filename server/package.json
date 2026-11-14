@@ -14,6 +14,13 @@
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^22.18.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/sanitize-html": "^2.16.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
@@ -23,19 +30,12 @@
     "jsonwebtoken": "^9.0.2",
     "luxon": "^3.7.2",
     "nodemailer": "^7.0.13",
+    "prisma": "6.19.3",
     "sanitize-html": "^2.18.1",
+    "typescript": "~5.9.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.9",
-    "@types/express": "^5.0.3",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/luxon": "^3.7.1",
-    "@types/node": "^22.18.0",
-    "@types/nodemailer": "^8.0.2",
-    "@types/sanitize-html": "^2.16.2",
-    "prisma": "6.19.3",
-    "tsx": "^4.20.6",
-    "typescript": "~5.9.3"
+    "tsx": "^4.20.6"
   }
 }
