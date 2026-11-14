@@ -1,0 +1,273 @@
+// Rev'd Silas O. Dada — messages and appointments
+// Database: MySQL (Hostinger). Apply changes with `npm run db:push`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── People ──────────────────────────────────────────────
+
+enum Role {
+  OWNER     // Rev'd Dada: everything, including appointments
+  SECRETARY // messages and website content only, never appointments
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  // Bumped on every password change or reset, which signs the account out everywhere else.
+  sessionVersion Int    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// One-time "forgot password" links. Only a hash of the token is stored.
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ─── Website content (filled in first-time setup) ────────
+
+model SiteProfile {
+  id             Int       @id @default(1)
+  displayName    String
+  titleLine      String    @db.VarChar(255)
+  welcomeLine    String?   @db.Text
+  story          String?   @db.Text
+  scripture      String?   @db.Text
+  scriptureRef   String?
+  portraitId     String?
+  aboutPhotoId   String?
+  casualPhotoId  String?
+  publicEmail    String?
+  publicPhone    String?
+  meetingAddress String?   @db.Text
+  mapsUrl        String?   @db.VarChar(500)
+  youtube        String?   @db.VarChar(500)
+  facebook       String?   @db.VarChar(500)
+  instagram      String?   @db.VarChar(500)
+  tiktok         String?   @db.VarChar(500)
+  x              String?   @db.VarChar(500)
+  onboardedAt    DateTime?
+  updatedAt      DateTime  @updatedAt
+}
+
+// Photos are stored in the database so redeploys never lose them.
+// The browser shrinks every photo before upload, so rows stay small.
+model Media {
+  id        String   @id @default(cuid())
+  mime      String
+  bytes     Bytes    @db.MediumBlob
+  width     Int
+  height    Int
+  alt       String?
+  createdAt DateTime @default(now())
+}
+
+// ─── Scheduler ───────────────────────────────────────────
+
+enum ConfirmMode {
+  AUTO    // confirmed the moment someone books (default)
+  APPROVE // Rev'd Dada approves each booking
+}
+
+enum MeetingMode {
+  IN_PERSON
+  WHATSAPP
+  BOTH // only for availability blocks; a booking is IN_PERSON or WHATSAPP
+}
+
+model Settings {
+  id                  Int         @id @default(1)
+  slotMinutes         Int         @default(45)
+  bufferMinutes       Int         @default(15)
+  minNoticeHours      Int         @default(24)
+  maxAdvanceDays      Int         @default(28)
+  maxPerDay           Int?        @default(4)
+  confirmMode         ConfirmMode @default(AUTO)
+  holdHours           Int         @default(24)
+  timezone            String      @default("Africa/Lagos")
+  reasonRetentionDays Int         @default(90)
+  updatedAt           DateTime    @updatedAt
+}
+
+model WeeklyBlock {
+  id       String      @id @default(cuid())
+  weekday  Int // 0 = Sunday … 6 = Saturday
+  start    String      @db.Char(5) // "10:00"
+  end      String      @db.Char(5) // "13:00"
+  mode     MeetingMode
+  location String?     @db.VarChar(255)
+
+  @@index([weekday])
+}
+
+enum OverrideType {
+  CLOSED
+  CUSTOM
+}
+
+model DayOverride {
+  id        String          @id @default(cuid())
+  date      DateTime        @unique @db.Date
+  type      OverrideType
+  note      String?         @db.VarChar(255)
+  blocks    OverrideBlock[]
+  createdAt DateTime        @default(now())
+}
+
+model OverrideBlock {
+  id         String      @id @default(cuid())
+  overrideId String
+  override   DayOverride @relation(fields: [overrideId], references: [id], onDelete: Cascade)
+  start      String      @db.Char(5)
+  end        String      @db.Char(5)
+  mode       MeetingMode
+  location   String?     @db.VarChar(255)
+
+  @@index([overrideId])
+}
+
+// One row per date, locked with SELECT … FOR UPDATE while a booking for that date is written.
+model DayLock {
+  date DateTime @id @db.Date
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  NEEDS_RESCHEDULE
+  COMPLETED
+  EXPIRED
+}
+
+model Booking {
+  id              String         @id @default(cuid())
+  name            String
+  phone           String // normalised to +234…
+  email           String
+  mode            MeetingMode // IN_PERSON or WHATSAPP
+  startAt         DateTime // UTC
+  endAt           DateTime // UTC
+  slotKey         DateTime?      @unique // = startAt while active, NULL once cancelled/declined/expired
+  reason          String?        @db.Text // confidential, cleared after reasonRetentionDays
+  reasonClearedAt DateTime?
+  isMember        Boolean        @default(true)
+  whatsappOptIn   Boolean        @default(true)
+  status          BookingStatus
+  manageToken     String         @unique
+  statusNote      String?        @db.Text
+  holdExpiresAt   DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  notifications   Notification[]
+
+  @@index([startAt])
+  @@index([status])
+}
+
+// ─── Notification outbox ─────────────────────────────────
+
+enum Channel {
+  EMAIL
+  WHATSAPP_MANUAL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model Notification {
+  id            String             @id @default(cuid())
+  bookingId     String?
+  booking       Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  channel       Channel
+  template      String
+  recipient     String
+  scheduledFor  DateTime
+  status        NotificationStatus @default(QUEUED)
+  attempts      Int                @default(0)
+  nextAttemptAt DateTime?
+  sentAt        DateTime?
+  error         String?            @db.Text
+  dedupeKey     String             @unique
+  createdAt     DateTime           @default(now())
+
+  @@index([status, scheduledFor])
+  @@index([bookingId])
+}
+
+// ─── Messages (blog) ─────────────────────────────────────
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+model Series {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  posts       Post[]
+}
+
+model Post {
+  id             String     @id @default(cuid())
+  title          String
+  slug           String     @unique
+  excerpt        String?    @db.Text
+  body           String     @db.LongText // sanitised HTML from the editor
+  scriptureRefs  String?    @db.VarChar(500)
+  coverVerse     String?    @db.Text
+  coverRef       String?
+  coverStyle     Int        @default(0)
+  seriesId       String?
+  series         Series?    @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  seriesPart     Int?
+  preachedOn     DateTime?  @db.Date
+  tags           String?    @db.VarChar(500)
+  discussion     String?    @db.Text // JSON array of questions
+  status         PostStatus @default(DRAFT)
+  publishedAt    DateTime?
+  seoTitle       String?
+  seoDescription String?    @db.Text
+  shareCaption   String?    @db.Text
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+model AiDraft {
+  id          String   @id @default(cuid())
+  input       String   @db.LongText
+  output      Json
+  postId      String?
+  model       String
+  tokens      Int?
+  createdById String
+  createdAt   DateTime @default(now())
+}

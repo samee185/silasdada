@@ -1,0 +1,92 @@
+/* Brand: New Covenant Church logo — royal blue, crimson, white. */
+:root {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --bg: #f6f6fb;
+  --surface: #ffffff;
+  --surface-2: #f7f7fc;
+  --surface-3: #ecedf7;
+  --ink: #10134a;
+  --ink-2: #383c5e;
+  --muted: #55597a;
+  --faint: #73768f;
+  --line: #e2e4f0;
+  --line-2: #d8daea;
+
+  /* The deep blue panels (hero, booking band, sidebar) stay dark in both modes. */
+  --brand: #10134a;
+  --brand-2: #1c2070;
+  --brand-3: #171b5e;
+  --brand-line: #30359a;
+  --brand-deep: #0a0c36;
+  --on-brand: #ffffff;
+  --on-brand-2: #cdd0ee;
+  --on-brand-3: #b3b7de;
+  --royal: #2d33b5;
+
+  --accent: #d62839;
+  --accent-hover: #b81f2f;
+  --on-accent: #ffffff;
+  --accent-text: #b31b2b;
+  --accent-soft: #fce8ea;
+  --accent-soft-line: #f3c5cb;
+  --accent-glow: #ff8a94;
+
+  --success: #1e7a4e;
+  --success-soft: #e7f2ec;
+  --success-text: #1e6b44;
+  --warn-soft: #fff9ee;
+  --warn-line: #f0d9ae;
+  --warn-text: #7a4a00;
+  --danger-text: #8a2e1f;
+  --danger-soft: #fdecea;
+
+  --shadow-lg: 0 40px 80px -40px rgba(16, 19, 74, 0.55);
+  --shadow-md: 0 24px 48px -24px rgba(16, 19, 74, 0.4);
+  --focus: #ff8a94;
+
+  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-lg: 28px;
+  --page-x: clamp(20px, 5vw, 80px);
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0b0d26;
+  --surface: #15183f;
+  --surface-2: #121538;
+  --surface-3: #1d2150;
+  --ink: #e6e7f8;
+  --ink-2: #c3c6e6;
+  --muted: #a5a8c6;
+  --faint: #8c8fb0;
+  --line: #262a57;
+  --line-2: #2f3466;
+
+  --brand: #0f1238;
+  --brand-2: #1a1e5c;
+  --brand-3: #151850;
+  --brand-line: #2c318a;
+  --brand-deep: #080a26;
+
+  --accent: #e03445;
+  --accent-hover: #f04a5a;
+  --accent-text: #ff8a94;
+  --accent-soft: #2a0f18;
+  --accent-soft-line: #5a1f2c;
+
+  --success: #2fa36b;
+  --success-soft: #0f2a1e;
+  --success-text: #6fd3a0;
+  --warn-soft: #2a2110;
+  --warn-line: #5a4519;
+  --warn-text: #f2c26b;
+  --danger-text: #ff8a80;
+  --danger-soft: #2a1210;
+
+  --shadow-lg: 0 40px 80px -40px rgba(0, 0, 0, 0.7);
+  --shadow-md: 0 24px 48px -24px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "silasdada",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rev'd Silas O. Dada \u2014 messages and appointments (silasdada.com.ng)",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,red \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client && npm run build -w server",
+    "start": "npm run start -w server",
+    "db:push": "npm run db:push -w server",
+    "create-admin": "npm run create-admin -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "build:hostinger": "npm run build && npm run db:push"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
